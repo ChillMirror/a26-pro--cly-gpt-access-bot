@@ -86,6 +86,15 @@ bot.command("logs", (ctx) => {
   ctx.reply(`📋 *15 derniers logs :*\n\n${text}`, { parse_mode: "Markdown" });
 });
 
+// /clear_logs (admin uniquement)
+bot.command("clear_logs", async (ctx) => {
+  if (ctx.from.id !== ADMIN_ID) 
+    return ctx.reply("⛔ Accès refusé.");
+  
+  fs.writeFileSync(LOGS_PATH, JSON.stringify([], null, 2));
+  ctx.reply("✅ Logs réinitialisés.");
+});
+
 // /auth
 bot.command("auth", async (ctx) => {
   const email = ctx.match?.trim().toLowerCase();
