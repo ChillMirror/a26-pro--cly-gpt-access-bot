@@ -63,6 +63,33 @@ bot.catch((err) => {
   console.error("Erreur bot:", err);
 });
 
+// /help - Affiche toutes les commandes disponibles
+bot.command("help", async (ctx) => {
+  const isAdmin = (ctx.from.id === ADMIN_ID);
+  
+  let message = "🤖 *Commandes du bot d'accès CapLanYetGPT*\n\n";
+  
+  // Commandes pour tout le monde
+  message += "📢 *Commandes publiques :*\n";
+  message += "`/start` - Message de bienvenue\n";
+  message += "`/auth email@domaine.com` - Demander un accès\n";
+  message += "`/help` - Afficher cette aide\n\n";
+  
+  // Commandes admin (si l'utilisateur est l'admin)
+  if (isAdmin) {
+    message += "👑 *Commandes administrateur :*\n";
+    message += "`/logs` - Voir les 15 derniers logs\n";
+    message += "`/list_emails` - Afficher tous les emails autorisés\n";
+    message += "`/add_email email@domaine.com` - Ajouter un email à la whitelist\n";
+    message += "`/remove_email email@domaine.com` - Supprimer un email de la whitelist\n";
+    message += "`/reset_logs` - Réinitialiser tous les logs\n";
+  }
+  
+  message += "\n📌 *Note :* Les liens OneTimeSecret sont à usage unique et expirent après 7 jours.";
+  
+  ctx.reply(message, { parse_mode: "Markdown" });
+});
+
 // /start
 bot.command("start", (ctx) => {
   ctx.reply(
@@ -291,6 +318,18 @@ bot.command("list_emails", async (ctx) => {
   const emailList = whitelist.map((email, index) => `${index + 1}. \`${email}\``).join("\n");
   
   ctx.reply(`📋 *Whitelist (${whitelist.length} email(s)):*\n\n${emailList}`, { parse_mode: "Markdown" });
+});
+
+// /reset_logs - Réinitialise tous les logs (admin uniquement)
+bot.command("reset_logs", async (ctx) => {
+  if (ctx.from.id !== ADMIN_ID) {
+    return ctx.reply("⛔ Accès refusé. Réservé à l'admin.");
+  }
+  
+  fs.writeFileSync(LOGS_PATH, JSON.stringify([], null, 2));
+  ctx.reply("✅ Tous les logs ont été réinitialisés.");
+  
+  writeLog({ telegramId: ADMIN_ID, username: ctx.from.username, email: null, action: "LOGS_RESET" });
 });
 
 // ─────────────────────────────────────────
