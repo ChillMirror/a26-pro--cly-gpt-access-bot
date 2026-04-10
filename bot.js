@@ -217,38 +217,80 @@ bot.on("callback_query:data", async (ctx) => {
   await ctx.answerCallbackQuery();
 });
 
-// /update_whitelist - Admin uniquement
-bot.command("update_whitelist", async (ctx) => {
-  // Vérifie que c'est bien l'admin
+// ─────────────────────────────────────────
+//  COMMANDES ADMIN POUR WHITELIST
+// ─────────────────────────────────────────
+
+// /add_email email@domaine.com
+bot.command("add_email", async (ctx) => {
   if (ctx.from.id !== ADMIN_ID) {
-    return ctx.reply("⛔ Accès refusé. Cette commande est réservée à l'admin.");
+    return ctx.reply("⛔ Accès refusé. Réservé à l'admin.");
   }
 
-  try {
-    // Télécharge la whitelist depuis GitHub
-    const response = await fetch("https://raw.githubusercontent.com/ChillMirror/CLY-GPT-Access-Bot/main/whitelist.json");
-    
-    if (!response.ok) throw new Error("Impossible de télécharger whitelist.json");
-    
-    const data = await response.json();
-    
-    // Vérifie le format
-    if (!data.emails || !Array.isArray(data.emails)) {
-      throw new Error("Format invalide : attendu { emails: [...] }");
-    }
-    
-    // Sauvegarde localement
-    fs.writeFileSync(WHITELIST_PATH, JSON.stringify(data, null, 2));
-    
-    ctx.reply(`✅ Whitelist mise à jour avec succès !\n📧 ${data.emails.length} emails autorisés.`);
-    
-    // Log l'action
-    writeLog({ telegramId: ADMIN_ID, username: ctx.from.username, email: null, action: "WHITELIST_UPDATED" });
-    
-  } catch (error) {
-    console.error("Erreur update whitelist:", error);
-    ctx.reply(`❌ Erreur lors de la mise à jour : ${error.message}`);
+  const email = ctx.match?.trim().toLowerCase();
+  
+  if (!email) {
+    return ctx.reply("❌ Usage : `/add_email email@domaine.com`", { parse_mode: "Markdown" });
   }
+
+  if (!email.includes("@") || !email.includes(".")) {
+    return ctx.reply("❌ Format d'email invalide.");
+  }
+
+  const whitelist = readWhitelist();
+  
+  if (whitelist.includes(email)) {
+    return ctx.reply(`📧 \`${email}\` est déjà dans la whitelist.`, { parse_mode: "Markdown" });
+  }
+
+  whitelist.push(email);
+  fs.writeFileSync(WHITELIST_PATH, JSON.stringify({ emails: whitelist }, null, 2));
+
+  ctx.reply(`✅ \`${email}\` ajouté.\n\n📋 Total : ${whitelist.length} email(s) autorisé(s).`, { parse_mode: "Markdown" });
+  writeLog({ telegramId: ADMIN_ID, username: ctx.from.username, email, action: "EMAIL_ADDED" });
+});
+
+// /remove_email email@domaine.com
+bot.command("remove_email", async (ctx) => {
+  if (ctx.from.id !== ADMIN_ID) {
+    return ctx.reply("⛔ Accès refusé. Réservé à l'admin.");
+  }
+
+  const email = ctx.match?.trim().toLowerCase();
+  
+  if (!email) {
+    return ctx.reply("❌ Usage : `/remove_email email@domaine.com`", { parse_mode: "Markdown" });
+  }
+
+  const whitelist = readWhitelist();
+  
+  if (!whitelist.includes(email)) {
+    return ctx.reply(`📧 \`${email}\` n'est pas dans la whitelist.`, { parse_mode: "Markdown" });
+  }
+
+  const newWhitelist = whitelist.filter(e => e !== email);
+  fs.writeFileSync(WHITELIST_PATH, JSON.stringify({ emails: newWhitelist }, null, 2));
+
+  ctx.reply(`✅ \`${email}\` retiré.\n\n📋 Total : ${newWhitelist.length} email(s) autorisé(s).`, { parse_mode: "Markdown" });
+  writeLog({ telegramId: ADMIN_ID, username: ctx.from.username, email, action: "EMAIL_REMOVED" });
+});
+
+// /list_emails - Affiche tous les emails de la whitelist
+bot.command("list_emails", async (ctx) => {
+  if (ctx.from.id !== ADMIN_ID) {
+    return ctx.reply("⛔ Accès refusé. Réservé à l'admin.");
+  }
+
+  const whitelist = readWhitelist();
+  
+  if (whitelist.length === 0) {
+    return ctx.reply("📋 La whitelist est vide.");
+  }
+
+  // Formate la liste des emails
+  const emailList = whitelist.map((email, index) => `${index + 1}. \`${email}\``).join("\n");
+  
+  ctx.reply(`📋 *Whitelist (${whitelist.length} email(s)):*\n\n${emailList}`, { parse_mode: "Markdown" });
 });
 
 // ─────────────────────────────────────────
