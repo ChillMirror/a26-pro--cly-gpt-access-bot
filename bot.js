@@ -82,7 +82,7 @@ bot.command("help", async (ctx) => {
     message += "`/list_emails` - Afficher tous les emails autorisés\n";
     message += "`/add_email email@domaine.com` - Ajouter un email à la whitelist\n";
     message += "`/remove_email email@domaine.com` - Supprimer un email de la whitelist\n";
-    message += "`/reset_logs` - Réinitialiser tous les logs\n";
+    message += "`/clear_logs` - Réinitialiser tous les logs\n";
   }
   
   message += "\n📌 *Note :* Les liens OneTimeSecret sont à usage unique et expirent après 7 jours.";
@@ -97,29 +97,6 @@ bot.command("start", (ctx) => {
     "Pour demander un accès, utilise la commande :\n`/auth ton.email@domaine.com`",
     { parse_mode: "Markdown" }
   );
-});
-
-// /logs (admin uniquement)
-bot.command("logs", (ctx) => {
-  if (ctx.from.id !== ADMIN_ID) {
-    return ctx.reply("⛔ Accès refusé.");
-  }
-  const logs = readLogs();
-  if (logs.length === 0) return ctx.reply("Aucun log pour l'instant.");
-  const last15 = logs.slice(-15).reverse();
-  const text = last15.map((l) =>
-    `[${l.timestamp}]\n👤 @${l.username || "inconnu"} (${l.telegramId})\n📧 ${l.email}\n📌 ${l.action}`
-  ).join("\n\n");
-  ctx.reply(`📋 *15 derniers logs :*\n\n${text}`, { parse_mode: "Markdown" });
-});
-
-// /clear_logs (admin uniquement)
-bot.command("clear_logs", async (ctx) => {
-  if (ctx.from.id !== ADMIN_ID) 
-    return ctx.reply("⛔ Accès refusé.");
-  
-  fs.writeFileSync(LOGS_PATH, JSON.stringify([], null, 2));
-  ctx.reply("✅ Logs réinitialisés.");
 });
 
 // /auth
@@ -248,6 +225,29 @@ bot.on("callback_query:data", async (ctx) => {
 //  COMMANDES ADMIN POUR WHITELIST
 // ─────────────────────────────────────────
 
+// /logs (admin uniquement)
+bot.command("logs", (ctx) => {
+  if (ctx.from.id !== ADMIN_ID) {
+    return ctx.reply("⛔ Accès refusé.");
+  }
+  const logs = readLogs();
+  if (logs.length === 0) return ctx.reply("Aucun log pour l'instant.");
+  const last15 = logs.slice(-15).reverse();
+  const text = last15.map((l) =>
+    `[${l.timestamp}]\n👤 @${l.username || "inconnu"} (${l.telegramId})\n📧 ${l.email}\n📌 ${l.action}`
+  ).join("\n\n");
+  ctx.reply(`📋 *15 derniers logs :*\n\n${text}`, { parse_mode: "Markdown" });
+});
+
+// /clear_logs (admin uniquement)
+bot.command("clear_logs", async (ctx) => {
+  if (ctx.from.id !== ADMIN_ID) 
+    return ctx.reply("⛔ Accès refusé.");
+  
+  fs.writeFileSync(LOGS_PATH, JSON.stringify([], null, 2));
+  ctx.reply("✅ Logs réinitialisés.");
+});
+
 // /add_email email@domaine.com
 bot.command("add_email", async (ctx) => {
   if (ctx.from.id !== ADMIN_ID) {
@@ -318,18 +318,6 @@ bot.command("list_emails", async (ctx) => {
   const emailList = whitelist.map((email, index) => `${index + 1}. \`${email}\``).join("\n");
   
   ctx.reply(`📋 *Whitelist (${whitelist.length} email(s)):*\n\n${emailList}`, { parse_mode: "Markdown" });
-});
-
-// /reset_logs - Réinitialise tous les logs (admin uniquement)
-bot.command("reset_logs", async (ctx) => {
-  if (ctx.from.id !== ADMIN_ID) {
-    return ctx.reply("⛔ Accès refusé. Réservé à l'admin.");
-  }
-  
-  fs.writeFileSync(LOGS_PATH, JSON.stringify([], null, 2));
-  ctx.reply("✅ Tous les logs ont été réinitialisés.");
-  
-  writeLog({ telegramId: ADMIN_ID, username: ctx.from.username, email: null, action: "LOGS_RESET" });
 });
 
 // ─────────────────────────────────────────
