@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: cly-gpt-access-bot
+    runtime: node
+    buildCommand: npm install
+    startCommand: node bot.js
+    envVars:
+      - key: NODE_VERSION
+        value: 20.11.0
+    plan: free
