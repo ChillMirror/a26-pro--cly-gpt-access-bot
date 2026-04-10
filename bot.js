@@ -209,7 +209,27 @@ bot.on("callback_query:data", async (ctx) => {
 });
 
 // ─────────────────────────────────────────
-//  DÉMARRAGE
+//  MINI SERVEUR POUR RENDER (HEALTH CHECK)
+// ─────────────────────────────────────────
+import http from 'http';
+
+const PORT = process.env.PORT || 10000;
+const server = http.createServer((req, res) => {
+  if (req.url === '/health') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ status: 'alive', timestamp: new Date().toISOString() }));
+  } else {
+    res.writeHead(404);
+    res.end();
+  }
+});
+
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`✅ Health check server running on port ${PORT}`);
+});
+
+// ─────────────────────────────────────────
+//  DÉMARRAGE DU BOT TELEGRAM
 // ─────────────────────────────────────────
 bot.start();
 console.log("✅ Bot démarré.");
