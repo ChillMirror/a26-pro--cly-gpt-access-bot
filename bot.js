@@ -217,6 +217,40 @@ bot.on("callback_query:data", async (ctx) => {
   await ctx.answerCallbackQuery();
 });
 
+// /update_whitelist - Admin uniquement
+bot.command("update_whitelist", async (ctx) => {
+  // Vérifie que c'est bien l'admin
+  if (ctx.from.id !== ADMIN_ID) {
+    return ctx.reply("⛔ Accès refusé. Cette commande est réservée à l'admin.");
+  }
+
+  try {
+    // Télécharge la whitelist depuis GitHub
+    const response = await fetch("https://raw.githubusercontent.com/ChillMirror/CLY-GPT-Access-Bot/main/whitelist.json");
+    
+    if (!response.ok) throw new Error("Impossible de télécharger whitelist.json");
+    
+    const data = await response.json();
+    
+    // Vérifie le format
+    if (!data.emails || !Array.isArray(data.emails)) {
+      throw new Error("Format invalide : attendu { emails: [...] }");
+    }
+    
+    // Sauvegarde localement
+    fs.writeFileSync(WHITELIST_PATH, JSON.stringify(data, null, 2));
+    
+    ctx.reply(`✅ Whitelist mise à jour avec succès !\n📧 ${data.emails.length} emails autorisés.`);
+    
+    // Log l'action
+    writeLog({ telegramId: ADMIN_ID, username: ctx.from.username, email: null, action: "WHITELIST_UPDATED" });
+    
+  } catch (error) {
+    console.error("Erreur update whitelist:", error);
+    ctx.reply(`❌ Erreur lors de la mise à jour : ${error.message}`);
+  }
+});
+
 // ─────────────────────────────────────────
 //  MINI SERVEUR POUR RENDER (HEALTH CHECK)
 // ─────────────────────────────────────────
