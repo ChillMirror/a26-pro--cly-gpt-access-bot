@@ -20,6 +20,22 @@ const WHITELIST_PATH = path.join(__dirname, "whitelist.json");
 const LOGS_PATH      = path.join(__dirname, "logs.json");
 
 // ─────────────────────────────────────────
+//  VÉRIFICATION ET CRÉATION DES FICHIERS
+// ─────────────────────────────────────────
+
+// Vérifie et crée whitelist.json s'il n'existe pas
+if (!fs.existsSync(WHITELIST_PATH)) {
+  fs.writeFileSync(WHITELIST_PATH, JSON.stringify({ emails: [] }, null, 2));
+  console.log("✅ whitelist.json créé");
+}
+
+// Vérifie et crée logs.json s'il n'existe pas
+if (!fs.existsSync(LOGS_PATH)) {
+  fs.writeFileSync(LOGS_PATH, JSON.stringify([], null, 2));
+  console.log("✅ logs.json créé");
+}
+
+// ─────────────────────────────────────────
 //  UTILITAIRES
 // ─────────────────────────────────────────
 const SECRET_CONTENT = fs.readFileSync(path.join(__dirname, "s_message.md"), "utf8"); // Texte que les membres recevront
