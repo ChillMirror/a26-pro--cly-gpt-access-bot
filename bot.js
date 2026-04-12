@@ -226,6 +226,7 @@ bot.on("callback_query:data", async (ctx) => {
 // ─────────────────────────────────────────
 
 // /logs (admin uniquement) - Version corrigée
+// /logs (admin uniquement) - Version HTML (plus fiable)
 bot.command("logs", (ctx) => {
   if (ctx.from.id !== ADMIN_ID) {
     return ctx.reply("⛔ Accès refusé.");
@@ -236,19 +237,27 @@ bot.command("logs", (ctx) => {
   
   const last15 = logs.slice(-15).reverse();
   
-  // Construction sans Markdown problématique
-  let text = "📋 *15 derniers logs :*\n\n";
+  let text = "<b>📋 15 derniers logs :</b>\n\n";
   
   for (const log of last15) {
-    text += `[${log.timestamp}]\n`;
-    text += `👤 ${log.username || "inconnu"} (${log.telegramId})\n`;
-    text += `📧 ${log.email || "N/A"}\n`;
+    text += `<i>${log.timestamp}</i>\n`;
+    text += `👤 ${escapeHtml(log.username || "inconnu")} (${log.telegramId})\n`;
+    text += `📧 ${escapeHtml(log.email || "N/A")}\n`;
     text += `📌 ${log.action}\n\n`;
   }
   
-  // Envoie en Markdown mais on échappe les caractères sensibles
-  ctx.reply(text, { parse_mode: "Markdown" });
+  ctx.reply(text, { parse_mode: "HTML" });
 });
+
+// Fonction utilitaire pour échapper les caractères HTML
+function escapeHtml(str) {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 
 // /clear_logs (admin uniquement)
 bot.command("clear_logs", async (ctx) => {
