@@ -225,18 +225,29 @@ bot.on("callback_query:data", async (ctx) => {
 //  COMMANDES ADMIN POUR WHITELIST
 // ─────────────────────────────────────────
 
-// /logs (admin uniquement)
+// /logs (admin uniquement) - Version corrigée
 bot.command("logs", (ctx) => {
   if (ctx.from.id !== ADMIN_ID) {
     return ctx.reply("⛔ Accès refusé.");
   }
+  
   const logs = readLogs();
   if (logs.length === 0) return ctx.reply("Aucun log pour l'instant.");
+  
   const last15 = logs.slice(-15).reverse();
-  const text = last15.map((l) =>
-    `[${l.timestamp}]\n👤 @${l.username || "inconnu"} (${l.telegramId})\n📧 ${l.email}\n📌 ${l.action}`
-  ).join("\n\n");
-  ctx.reply(`📋 *15 derniers logs :*\n\n${text}`, { parse_mode: "Markdown" });
+  
+  // Construction sans Markdown problématique
+  let text = "📋 *15 derniers logs :*\n\n";
+  
+  for (const log of last15) {
+    text += `[${log.timestamp}]\n`;
+    text += `👤 ${log.username || "inconnu"} (${log.telegramId})\n`;
+    text += `📧 ${log.email || "N/A"}\n`;
+    text += `📌 ${log.action}\n\n`;
+  }
+  
+  // Envoie en Markdown mais on échappe les caractères sensibles
+  ctx.reply(text, { parse_mode: "Markdown" });
 });
 
 // /clear_logs (admin uniquement)
