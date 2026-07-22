@@ -9,8 +9,8 @@ import { fileURLToPath } from "url";
 // ─────────────────────────────────────────
 const BOT_TOKEN      = "8699467266:AAHoUqjkh1LQcA0MzC3SlyX3hGHKGVakjt8";
 const ADMIN_ID       = 8427229478; // Ton Telegram ID (nombre, sans guillemets)
-const OTS_EMAIL      = "teddy.ek.pro@gmail.com";
-const OTS_API_KEY    = "0650499fc84d7d951885eb4cd879e79e4d864be1";
+const OTS_EMAIL      = "teddy.ek.pro+megaots@gmail.com";
+const OTS_API_KEY    = "5lmhze2emn06p37femgsjjyooxjkt5vqsuu0xyzqhbm9c7k1uz";
 
 // ─────────────────────────────────────────
 //  CHEMINS FICHIERS
